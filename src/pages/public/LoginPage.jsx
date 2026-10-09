@@ -1,47 +1,61 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Landmark, ArrowRight, ShieldCheck, UserCheck } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { Landmark, ArrowRight, UserCheck } from 'lucide-react';
+import { useAuth, DEMO_CREDENTIALS } from '../../context/AuthContext';
 import { Button, Input, Card } from '../../components/common';
 import { useToast } from '../../context/ToastContext';
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { login, availableUsers } = useAuth();
+  const { login, loginWithPreset } = useAuth();
   const { addToast } = useToast();
-  const [email, setEmail] = useState('customer@permatasakinah.id');
-  const [password, setPassword] = useState('password');
+  const [email, setEmail] = useState('admin@permatasakinah.test');
+  const [password, setPassword] = useState('Password123!');
   const [loading, setLoading] = useState(false);
 
-  const handleQuickLogin = (role) => {
-    login(role);
-    addToast(`Berhasil masuk sebagai ${role}`, 'success');
-    if (role === 'CUSTOMER') {
-      navigate('/customer');
-    } else {
-      navigate('/dashboard');
+  const handleQuickLogin = async (presetRole) => {
+    setLoading(true);
+    try {
+      const res = await loginWithPreset(presetRole);
+      if (res.success) {
+        addToast(`Berhasil masuk sebagai ${presetRole} (${res.user?.name})`, 'success');
+        if (presetRole === 'CUSTOMER') {
+          navigate('/customer');
+        } else {
+          navigate('/dashboard');
+        }
+      } else {
+        addToast(res.error?.message || 'Gagal login demo', 'error');
+      }
+    } catch (err) {
+      addToast(err.message || 'Gagal login ke server', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    setTimeout(() => {
-      // Find matching user from mock data or default to CUSTOMER
-      const found = availableUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
-      const roleToSet = found ? found.role : 'CUSTOMER';
-
-      login(roleToSet);
-      addToast(`Selamat datang kembali, ${found ? found.name : 'Customer'}!`, 'success');
-      setLoading(false);
-
-      if (roleToSet === 'CUSTOMER') {
-        navigate('/customer');
+    try {
+      const res = await login(email, password);
+      if (res.success) {
+        const user = res.user;
+        addToast(`Selamat datang kembali, ${user.name}!`, 'success');
+        if (user.role === 'CUSTOMER') {
+          navigate('/customer');
+        } else {
+          navigate('/dashboard');
+        }
       } else {
-        navigate('/dashboard');
+        addToast(res.error?.message || 'Email atau kata sandi tidak valid', 'error');
       }
-    }, 400);
+    } catch (err) {
+      addToast(err.message || 'Terjadi kesalahan saat masuk', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -113,23 +127,24 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* Quick Role Simulator Presets */}
+          {/* Quick Demo Login Presets */}
           <div className="mt-6 pt-6 border-t border-slate-100">
             <div className="flex items-center justify-between mb-3">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                Simulasi Login Cepat:
+                Simulasi Login Demo:
               </span>
               <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
-                Demo Mode
+                Live API
               </span>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              {availableUsers.map((u) => (
+              {DEMO_CREDENTIALS.map((u) => (
                 <button
                   key={u.role}
                   type="button"
+                  disabled={loading}
                   onClick={() => handleQuickLogin(u.role)}
-                  className="px-3 py-2 text-left rounded-lg border border-slate-200 hover:border-primary hover:bg-brand-50/50 transition-all text-xs group"
+                  className="px-3 py-2 text-left rounded-lg border border-slate-200 hover:border-primary hover:bg-brand-50/50 transition-all text-xs group disabled:opacity-50"
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-slate-900 group-hover:text-primary transition-colors">

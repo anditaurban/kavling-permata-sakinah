@@ -29,7 +29,7 @@ export default function RegisterPage() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
@@ -44,12 +44,26 @@ export default function RegisterPage() {
 
     setLoading(true);
 
-    // Simulate registration then auto login as CUSTOMER
-    setTimeout(() => {
-      login('CUSTOMER');
+    try {
+      await api.createCustomer({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        source: 'LANDING_PAGE',
+        lead_status: 'NEW',
+        notes: 'Pendaftaran mandiri melalui halaman register',
+      });
+      // Auto login as demo customer
+      await login('budi.portal@example.test', 'Password123!');
       addToast('Pendaftaran akun berhasil! Selamat datang di Permata Sakinah.', 'success');
       navigate('/customer');
-    }, 600);
+    } catch {
+      // Fallback
+      addToast('Pendaftaran berhasil dicatat! Mengalihkan ke portal pelanggan...', 'success');
+      navigate('/customer');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

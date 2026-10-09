@@ -1,4 +1,6 @@
 import React from 'react';
+import { Inbox } from 'lucide-react';
+import Button from './Button';
 
 export default function Table({
   columns = [],
@@ -6,6 +8,10 @@ export default function Table({
   keyField = 'id',
   isLoading = false,
   emptyMessage = 'Tidak ada data ditemukan.',
+  emptyTitle,
+  emptyDescription,
+  emptyActionText,
+  onEmptyAction,
   onRowClick,
   className = '',
 }) {
@@ -37,8 +43,27 @@ export default function Table({
             </tr>
           ) : data.length === 0 ? (
             <tr>
-              <td colSpan={columns.length} className="px-4 py-10 text-center text-slate-500 text-sm">
-                {emptyMessage}
+              <td colSpan={columns.length} className="px-4 py-12 text-center">
+                <div className="flex flex-col items-center justify-center text-center max-w-sm mx-auto">
+                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-2.5">
+                    <Inbox className="w-5 h-5" />
+                  </div>
+                  <h5 className="text-sm font-semibold text-slate-800">
+                    {emptyTitle || emptyMessage}
+                  </h5>
+                  {emptyDescription && (
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                      {emptyDescription}
+                    </p>
+                  )}
+                  {emptyActionText && onEmptyAction && (
+                    <div className="mt-3">
+                      <Button variant="outline" size="sm" onClick={onEmptyAction}>
+                        {emptyActionText}
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </td>
             </tr>
           ) : (

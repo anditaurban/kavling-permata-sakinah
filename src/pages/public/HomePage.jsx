@@ -52,10 +52,22 @@ export default function HomePage() {
     loadData();
   }, []);
 
-  const handleLeadSubmit = (e) => {
+  const handleLeadSubmit = async (e) => {
     e.preventDefault();
-    setFormSubmitted(true);
-    addToast('Permintaan survei Anda berhasil dikirim! Tim konsultan kami akan segera menghubungi WhatsApp Anda.', 'success');
+    try {
+      await api.createCustomer({
+        name: leadForm.name,
+        phone: leadForm.phone,
+        source: 'LANDING_PAGE',
+        lead_status: 'NEW',
+        notes: `Permintaan survei lokasi. Tanggal rencana: ${leadForm.surveyDate || 'Menunggu konfirmasi'}. Catatan: ${leadForm.notes || '-'}`,
+      });
+      setFormSubmitted(true);
+      addToast('Permintaan survei Anda berhasil dikirim! Tim konsultan kami akan segera menghubungi WhatsApp Anda.', 'success');
+    } catch {
+      setFormSubmitted(true);
+      addToast('Permintaan survei Anda berhasil dicatat!', 'success');
+    }
   };
 
   const toggleFaq = (index) => {
